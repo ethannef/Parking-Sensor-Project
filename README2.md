@@ -68,6 +68,9 @@
 - Display layer: "We're going to use the Adafruit IO platform to illustrate how to publish data to the cloud and monitor it from anywhere in the globe"
 - Authors consciously rejected Firebase: "We restricted the usage of firebase database in our project and shifted to cloud database as we were aware of the complexities involved in transferring the data from database to the mobile app or any other user point"
 
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of Firebase (stated):** Authors explicitly rejected it due to "the complexities involved in transferring the data from database to the mobile app or any other user point" — AWS IoT Shadow chosen instead
+
 ---
 
 ### 1.4 Dipal018/Smart_Parking
@@ -106,6 +109,13 @@
   - Python Dashboard: "KPIs from the parking usage and the most relevant information for an ADMIN user"
 - Docker command shown in source: `docker run -d --name smartpark_c -e POSTGRES_PASSWORD=12345 -e POSTGRES_USER=admin -e POSTGRES_DB=smartpark_db -p 5432:5432 postgres:15.3`
 - Version tags: Flutter 3.19.6, Spring Boot 3.0, Python + MicroPython, PostgreSQL 15.3, Java SDK 20
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Improved Efficiency (stated):** Source lists "Improved Efficiency" as a conclusion of the system
+- ✅ **Enhanced Security (stated):** Source lists "Enhanced Security" as a conclusion
+- ✅ **Automation and Convenience (stated):** Source lists "Automation and Convenience" as a conclusion
+- ✅ **Real-Time Monitoring (stated):** Source lists "Real-Time Monitoring" as a conclusion
+- ✅ **Resource Optimization (stated):** Source lists "Resource Optimization" as a conclusion
 
 ---
 
@@ -221,6 +231,10 @@
 - History: Originally used pressure sensors, then migrated to magnetometer as "no longer our sensor of choice"
 - Raspberry Pi basestation: "the Raspberry Pi would analyze the data from multiple sensors, and update a web page that can be viewed on a mobile device"
 
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of pressure sensors (stated):** Source explicitly migrated away from pressure sensors, describing them as "no longer our sensor of choice" — the reason the magnetometer codebase exists
+- ✅ **Advantage of auto-recalibration (stated):** The 10-minute auto-recalibration timer (`recalibrateTime = 600000`) is described in source as solving drift in the baseline over time
+
 ---
 
 ### 1.13 aswin-sreekumar/Smart-parking-system
@@ -245,6 +259,10 @@
 - Note in repo: "Obsolete code for experimenting with different approaches to license plate recognition" — indicates multiple LPR approaches were tried
 - Raspberry Pi Zero W compatibility note: "Yarn package manager must be used for Raspberry Pi Zero W (arm6l) compatibility"
 - Continuous tasks: "live telemetry collection and license plate recognition are continuously carried out"
+
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of prior manual system (stated):** "The car park of the HKUST campus operates on manual and paper processes, which is inefficient and prone to human error"
+- ✅ **Advantage of this system (stated):** Aims to "smoothen and speed up operations such as visitor guidance, payment, access control, and park management" and "reduction in human resources required"
 
 ---
 
@@ -296,6 +314,9 @@
   - CNRParkOdd result: Paper 0.9240, PyTorch 0.9071
 - Citation block from source: `@article{amato2017deep, title={Deep learning for decentralized parking lot occupancy detection}, author={Amato, Giuseppe and Carrara, Fabio and Falchi, Fabrizio and Gennaro, Claudio and Meghini, Carlo and Vairo, Claudio}, journal={Expert Systems with Applications}, volume={72}, pages={327--334}, year={2017}, publisher={Pergamon}}`
 
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of PyTorch re-implementation vs. original Caffe (stated by source numbers):** PyTorch consistently underperforms the original Caffe results across all tested conditions — e.g., SUNNY→PKLot: Paper 0.850 vs. PyTorch 0.759; SUNNY→RAINY: Paper 0.960 vs. PyTorch 0.912. The source presents these figures directly without explanation for the gap.
+
 ---
 
 ### 2.4 sk0601/Smart-Parking-System (LDR-guided autonomous toy cars)
@@ -306,6 +327,11 @@
 - Sensor choice rationale from source: "We have chosen IR module instead of RF module because we want a receiver having line of sight communication with the transmitter. But RF does not require line of sight communication. And in case of LDR, there is scope for false triggering due to sunlight or headlight of car. So considering all these points we have finalized to use IR module"
 - Guidance mechanism: "Each car has an LDR so that it can follow while glowing LEDs. The car moves to the slot which is nearest to it. LEDs are installed at the entrance of all parking slots and the empty slot is indicated by the respective glowing LED"
 - Future application cited: "Can be used in IoT as a smart parking system and in AID to Google Self-Drive car (Google Self Drive car works on the principle of LIDAR by mapping and monitoring movement of vehicles & people around it)"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of IR over RF (stated):** "We have chosen IR module instead of RF module because we want a receiver having line of sight communication with the transmitter" — line-of-sight is explicitly preferred for slot detection
+- ❌ **Disadvantage of RF (stated):** "RF does not require line of sight communication" — treated as a drawback in this context as it reduces precision of slot detection
+- ❌ **Disadvantage of LDR (stated):** "In case of LDR, there is scope for false triggering due to sunlight or headlight of car" — explicitly rejected for this reason
 
 ---
 
@@ -401,6 +427,11 @@
   - Specified in inches, resolution 0.1 inch
 - Temperature sensing: "Sensing the ambient air temperature to compute an accurate speed of sound for distance measurement"
 - Network features (from source list): "WiFi connection to the home network for control · Setting the 'target' parking distance via pushbutton · Setup of parameters by web application · Web application implemented an approach where the characteristics of the set of control parameters were defined in a JSON file · Websocket interface for delivery of parameters · A telnet interface for debugging · Supported ArduinoOTA for code downloads over the network · mDNS for network address discovery · Parameters retained in the ESP32 using nonvolatile storage · A real-time clock, synchronized to an NTP time server, to turn off the unit during off-hours · Printed circuit board designed to fit within a standard plastic enclosure"
+
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of naive distance sensing (stated):** Source explicitly names the problem that "people walking between the car and the sensor" can cause the system to exit the Parked state incorrectly — a real-world false-negative the state machine was designed to prevent
+- ✅ **Advantage of Parked state latching (stated):** "Once the Parked state is entered, that state remains active until measurements indicate the vehicle is no longer parked nearby, and a certain time has passed" — source describes this as ensuring "the LED display is stable"
+- ✅ **Advantage of temperature correction (stated):** "Sensing the ambient air temperature to compute an accurate speed of sound for distance measurement" — source explicitly cites this as improving accuracy
 
 ---
 
@@ -522,6 +553,9 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Inference: "The trained model from Edge Impulse provided all the necessary code snippets, and I simply integrated it into my ESP32-CAM setup. The device captures images, runs them through the trained model, and classifies parking spaces as either vacant or occupied"
 - Output: "showing whether the parking spaces were available" via Wi-Fi web interface
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of Edge Impulse for small datasets (stated):** "The platform allows you to fine-tune pre-trained models for specific tasks, which is perfect for working with limited data like mine (only around 200 images)" — source explicitly cites this as the reason Edge Impulse was chosen over alternatives
+
 ---
 
 ### 4.9 CircuitDigest — AI-Based Smart Parking System (ESP32-CAM + ALPR)
@@ -562,6 +596,11 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - LPWAN justification: "Protocols like SigFox, LoRaWAN or NB-IoT could be considered for implementing a smart parking solution"
 - Context: "parking slots are bigger and cover hundreds of square meters particularly in places like hospitals, universities, schools, cities"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of magnetic sensors over RFID (stated):** "sensors should not be invasive as RFID" — source explicitly positions magnetometers as the better fit for non-invasive detection
+- ✅ **Advantage of magnetic sensors over other types (stated):** "magnetic sensors are the ones that best fit the detection requirement" for low energy, long-range, false-positive avoidance
+- ❌ **Disadvantage of Wi-Fi, BLE, Zigbee (stated):** "appropriate for short distances (less than 500 m)" — explicitly ruled out for large parking areas such as hospitals, universities, and cities
+
 ---
 
 ### 5.2 Smart Parking Sensors State of the Art (ScienceDirect, Journal of Cleaner Production 2020)
@@ -572,6 +611,10 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Radio technologies analyzed: LoRa, Sigfox, NB-IoT — power requirements compared
 - "In depth analysis of commercial LPWA smart parking detector in terms of consumption and lifetime duration is also provided"
 - Key finding: "two potential strategies that may extend battery lifetime of smart parking sensor device"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of LPWA technologies (stated):** Source specifically analyzes LoRa, Sigfox, and NB-IoT for power consumption and battery lifetime — framed as the key advantage over shorter-range protocols
+- ✅ **Advantage of battery lifetime strategies (stated):** Source identifies "two potential strategies that may extend battery lifetime of smart parking sensor device" — presented as a contribution of the paper
 
 ---
 
@@ -611,6 +654,9 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - "The main idea of the article is to place a PNI Place Pod magnetic sensor in the parking areas that detects the occupancy of that area and then this information will be sent to the cloud via Things Mate application to provide the live data"
 - LoRaWAN rationale: "preferred because of its low power consumption with higher range of communication and also to ensure the seamless data transfer among the sensors and to the connected servers"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of LoRaWAN over alternatives (stated):** Source explicitly states LoRaWAN is "preferred because of its low power consumption with higher range of communication" — both stated as direct reasons for the choice
+
 ---
 
 ### 5.6 Privacy Leakage of LoRaWAN Smart Parking Sensors (ScienceDirect 2022)
@@ -619,6 +665,9 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 **What the source actually says:**
 - System implemented: "Arduino UNO microcontroller and two sensors — a triaxial magnetic sensor and a waterproof ultrasonic sensor" (same build as IoT-SPMS-LoRaWAN above)
 - Key concern documented: "As the Internet of Things (IoT) evolves, it paves the way for vital smart city applications, with the Smart Parking Management System (SPMS) standing as a prime example" — paper then identifies that traffic analysis of LoRaWAN uplink packets can leak presence/absence information
+
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of LoRaWAN parking sensors (stated):** Source explicitly identifies that traffic analysis of LoRaWAN uplink packets — even without decrypting the payload — can reveal a user's presence and absence patterns, constituting a privacy leakage vulnerability in deployed smart parking systems
 
 ---
 
@@ -646,6 +695,10 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Claim: "outperforming traditional manual and sensor-based methods in both efficiency and accuracy"
 - Key result: "The model's ability to accurately identify occupied and vacant parking spaces is seen in Fig 6. The detection results demonstrate the system's faultless ability to recognize cars and correctly assign them to parking spaces"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage over sensor-based methods (stated):** Source directly claims the YOLO+OpenCV approach "outperforming traditional manual and sensor-based methods in both efficiency and accuracy"
+- ✅ **Advantage of multi-angle cameras (stated):** Source uses "surveillance video recordings captured from multiple angles around the NCB main building" — the multi-angle approach is presented as improving detection coverage
+
 ---
 
 ### 5.9 MobileNetV3 + CBAM Parking Occupancy (NCBI/PMC 2023)
@@ -656,6 +709,9 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Architectural modifications: "integration of a convolutional block attention mechanism in place of the native attention module and the adoption of blueprint separable convolutions instead of the traditional depth-wise separable convolutions"
 - Key metric: "AUC value of 0.99 for most experiments with the PKLot dataset"
 - Comparison: "average accuracy of 98.01%, while CarNet achieves 97.03%"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage over CarNet baseline (stated):** Source directly reports 98.01% average accuracy vs. CarNet's 97.03% — the architectural modifications (CBAM attention + blueprint separable convolutions) are stated as the reason for the improvement
 
 ---
 
@@ -669,6 +725,11 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Thronton et al.: "applied laser sensor for the fast survey of parallel on-street parking. They focused on filtering out road curbs and other driving cars on street as noise"
 - Ibisch et al.: "employed RANSAC and Kalman Filters in tracking parking through multiple Lidar sensors embedded in a parking garage in the lack of GPS information"
 - Supported by: "Mobility Transformation Center, University of Michigan"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of ultrasonic probe-car approach (stated):** Mathur et al. results cited in source — "parking spot counts are 95% accurate and occupancy maps can achieve over 90% accuracy" over 500 miles of data
+- ❌ **Disadvantage of laser/LiDAR approaches (stated):** Thronton et al. and Ibisch et al. approaches cited in source highlight the need to filter road curbs, moving traffic, and work without GPS — practical complications stated as challenges in the related works
+- ❌ **Disadvantage of LiDAR in GPS-denied environments (stated):** Ibisch et al. work cited as requiring RANSAC and Kalman Filters specifically "in the lack of GPS information" — implying GPS absence is a limiting condition
 
 ---
 
@@ -708,6 +769,9 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Binary reporting: "MCU node would send a condition of '0' or empty, while if it detected a vehicle, it would send the condition '1' or occupied"
 - Visual representation: "If a parking slot is empty, it is represented by green block. If it is filled, it is represented by red block"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of star topology (stated):** Source uses the word "advantage" directly — "star topology whose advantage was that if one client was disconnected, it would not interfere with other clients to connect with the broker" — fault isolation is the explicitly stated benefit
+
 ---
 
 ## 6. Patents {#patents}
@@ -731,6 +795,13 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Cross-training: "radar results can be used to train the magnetometer sensor 520 so that magnetometer algorithms can learn to be more accurate than just using the magnetometer sensor 520. This can be done for both empty and occupied states"
 - Installation: "The parking sensor device 200 can be used above ground or in ground"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage: battery life (stated):** Patent states "up to ten years or more" — explicitly cited as a benefit of the triggered wake architecture
+- ✅ **Advantage: low manufacturing cost (stated):** Patent states "only about $50 USD per unit"
+- ✅ **Advantage: self-calibration (stated):** "control circuitry may be configured to adjust one or more magnetometer detection thresholds or other settings based on the level of magnetic noise present in the vicinity" — adapts to local environment automatically
+- ✅ **Advantage: radar cross-trains magnetometer (stated):** "radar results can be used to train the magnetometer sensor 520 so that magnetometer algorithms can learn to be more accurate than just using the magnetometer sensor 520"
+- ✅ **Advantage: flexible installation (stated):** "can be used above ground or in ground" — no civil works required for surface deployment
+
 ---
 
 ### 6.2 US11322028 + US10991249 — Radar-Augmentation of Parking Space Sensors
@@ -744,6 +815,10 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Solution: radar detectors placed to cover multiple spaces each, augmenting per-space magnetic sensors
 - Simulation claim: "performing a simulation to determine parking spaces of the plurality of parking spaces for which the one or more radar-based vehicle detectors are insufficient to accurately determine whether any vehicle is present within the parking spaces greater than the defined accuracy threshold"
 - Gateway role: "the parking host system is part of a gateway device that serves as an interface between a cloud-based server system and the plurality of parking space sensors"
+
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of per-space sensor deployments (stated):** Patent explicitly states "if a large number of parking spaces are present, it may be prohibitively expensive and cumbersome to install a parking sensor in every parking space" — this is the problem the radar-augmentation approach is patented to solve
+- ✅ **Advantage of radar augmentation (stated):** Radar detectors cover multiple spaces each, reducing the number of sensors needed while maintaining accuracy above a defined threshold
 
 ---
 
@@ -768,6 +843,11 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Camera advantage: "a single device may be used to detect occupancy for multiple designated spaces, thereby reducing the number of co[mponents]"
 - Metadata: "image data can be used to determine which particular spaces are occupied by objects, the types of objects in the spaces, and other associated metadata"
 
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of magnetometer/puck sensors (stated):** Patent explicitly lists three: (1) "cannot discern if a non-metallic object such as a cardboard box is occupying the location"; (2) "are incapable of communicating to a driver who is not physically present at that particular row of vehicles"; (3) "are unable to distinguish if a vehicle has parked poorly"
+- ✅ **Advantage of camera over magnetometer (stated):** "a single device may be used to detect occupancy for multiple designated spaces, thereby reducing the number of components"
+- ✅ **Advantage of ceiling LED indicators (stated):** "A vehicle's driver approaching a row of parking spots may thus ascertain the availability of parking spots for an entire row at a time" — communicates to drivers not yet at the space
+
 ---
 
 ### 6.5 US7893847 — Real-Time Detection via Symbol-Based Vision
@@ -787,6 +867,10 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Method: "vehicles equipped with vision-based analytics" — cameras already on vehicle run AI to detect parking spaces as the driver passes
 - Privacy-preserving: "extract metadata about parking space availability and upload the metadata without uploading video data"
 - Features claimed: "(i) guide a driver to an available parking space, (ii) indicate where and when parking spaces are more likely to be available, (iii) rely on crowd-sourcing, (v) reward users for holding parking spaces for other users, (vi) enable drivers to plan errands around parking space availability, (vii) enable drivers to locate parking spaces for other drivers, (viii) improve road safety by handing off parking spot searching to a cloud-computing service"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage: road safety improvement (stated):** Patent explicitly claims the system can "improve road safety by handing off parking spot searching to a cloud-computing service" — removing distracted driving from the search process
+- ✅ **Advantage: privacy-preserving data collection (stated):** "extract metadata about parking space availability and upload the metadata without uploading video data" — explicitly framed as a privacy advantage over raw video upload approaches
 
 ---
 
@@ -810,6 +894,10 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Echo validation: "determining that the echo is a true echo when a width and a peak value of the echo are in a preset range"
 - Stopped-vehicle check: "determining that the echo is a true echo when the vehicle is stopped and all of a plurality of echoes of the ultrasonic wave output a plurality of times by the ultrasonic sensor exist within a preset distance"
 
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of standard ultrasonic sensing (stated):** The entire patent exists to solve false echoes — source describes echoes being "mistaken for a false echo due to noise" and the need to validate "width and a peak value of the echo" before accepting a detection as real
+- ✅ **Advantage of CA-CFAR adaptive threshold (stated):** "setting a minimum level of the adaptive threshold value to prevent the echo from being mistaken for a false echo due to noise" — the adaptive per-section threshold is explicitly stated as preventing false positives
+
 ---
 
 ### 6.9 US9696420 — Active Park Assist (Radar + Ultrasonic Fusion)
@@ -822,6 +910,13 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Edge detection: "Vehicle edge detection is important to final parking performance and the ultrasonic sensors alone may not be capable of detecting the edges consistently. The effect is multiplied at higher passing speeds"
 - Environmental sensitivity of ultrasonic: "Depending on the humidity and temperature, the speed at which the echoes travel in air is vastly different"
 - Fusion benefit: "combined data stream would result in rejecting a false spot that would be offered with a traditional standalone ultrasonic system"
+
+**Advantages / Disadvantages (as stated by source):**
+- ❌ **Disadvantage of ultrasonic alone — dimensionality (stated):** "one-dimensional and may only determine distance to lower object(s) reliably"
+- ❌ **Disadvantage of ultrasonic alone — edge detection (stated):** "ultrasonic sensors alone may not be capable of detecting the edges consistently. The effect is multiplied at higher passing speeds"
+- ❌ **Disadvantage of ultrasonic alone — environmental sensitivity (stated):** "Depending on the humidity and temperature, the speed at which the echoes travel in air is vastly different"
+- ✅ **Advantage of radar (stated):** "radar will report out objects that are above 0.3 m" — detects objects ultrasonic misses due to its single-dimensional limitation
+- ✅ **Advantage of sensor fusion (stated):** "combined data stream would result in rejecting a false spot that would be offered with a traditional standalone ultrasonic system"
 
 ---
 
@@ -861,6 +956,11 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Deployment markets mentioned: "UAE, Spain, and Panama"
 - Installation: "convenient surface mounting installation"
 
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage of dual-sensor over single-sensor (stated):** "Compared to traditional parking sensor with single sensor, LW009-SM greatly improved the detection accuracy and reduced information loss" — source explicitly positions the dual-sensor design as superior
+- ✅ **Advantage for low-chassis vehicles (stated):** Source specifically addresses "acquiring complementary and optimization to the reverse sensitivity characteristics of chassis with different heights" — the radar fills in where the magnetometer has reduced sensitivity for low vehicles
+- ❌ **Limitation acknowledged (stated):** "Strong magnetic disturbance alarm" is listed as an alert type — acknowledging that strong magnetic environments can interfere with detection
+
 ---
 
 ### 7.2 Bosch TPS110 (TTN Device Repository)
@@ -895,6 +995,12 @@ const unsigned long readInterval = 250;  // read sensor every 250ms
 - Offline resilience: "Prevents data loss during network outages by securely storing logs, sensor data, & event history"
 - Installation: "tool-free surface or in-ground installation powered by a long-life battery. With no wiring or civil work deployment takes just minutes"
 - Noise rejection: "advanced RF architecture and noise-resistant design ensure 99% detection accuracy — even in areas with heavy wireless interference or magnetic noise"
+
+**Advantages / Disadvantages (as stated by source):**
+- ✅ **Advantage: offline resilience (stated):** "Prevents data loss during network outages by securely storing logs, sensor data, & event history" — explicitly stated as a feature
+- ✅ **Advantage: noise resistance (stated):** "advanced RF architecture and noise-resistant design ensure 99% detection accuracy — even in areas with heavy wireless interference or magnetic noise" — source explicitly positions this as an advantage in challenging RF environments
+- ✅ **Advantage: no civil works needed (stated):** "tool-free surface or in-ground installation powered by a long-life battery. With no wiring or civil work deployment takes just minutes"
+- ✅ **Advantage: industrial I/O compatibility (stated):** "Compatible with RS485, 0-10V, 4-20mA, & digital inputs for seamless industrial automation" — broader integration than most parking sensors
 
 ---
 
