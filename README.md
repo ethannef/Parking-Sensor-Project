@@ -110,7 +110,49 @@ Your working directory should end up containing, at minimum:
 `calibrate.py`, `run.py`, `screenshot.py`, `yolo11n_ncnn_model/`,
 `yolo11n.pt`, `yolo11s.pt`, and the `yolo-env/` folder.
 
-## 9. Print the calibration markers
+## 9. Before pushing to GitHub — add a `.gitignore`
+
+The model weights, exported NCNN model, virtual environment, and generated
+log/snapshot files are all large and/or machine-specific — they shouldn't
+be committed. Create a `.gitignore` before your first push:
+
+```bash
+cat > .gitignore << 'EOF'
+# Python environment
+yolo-env/
+__pycache__/
+*.pyc
+
+# YOLO model weights and exports (large binary files, easy to re-download/re-export)
+yolo11n.pt
+yolo11s.pt
+yolo11n_ncnn_model/
+
+# Ultralytics default output directory
+runs/
+
+# Generated data (not needed in version control)
+tally_log.csv
+calibration_snapshot.jpg
+EOF
+
+git add .gitignore
+git commit -m "Add .gitignore for YOLO models, venv, and generated files"
+git push
+```
+
+**Don't use a blanket `*.jpg` or `*.png` rule here** — `screenshot.py`
+pushes `.jpg` images to the separate `screenshots` branch, and a wildcard
+image rule in `.gitignore` would block those commits too, since that
+branch inherits this same file. The exact filename
+`calibration_snapshot.jpg` is excluded above instead, so it won't
+conflict with that.
+
+**Optional:** if you don't want your specific zone calibration tracked
+either (since it's tied to one physical camera setup and won't be valid
+for anyone else's), add `zones.json` to the list above as well.
+
+## 10. Print the calibration markers
 
 `marker_0.png` and `marker_1.png` (included in the repo) are ArUco markers
 used to mark your two zones — print both on regular paper. Keep the white
@@ -118,7 +160,7 @@ border around each marker; it improves detection reliability.
 
 ---
 
-## 10. What each script does, and the order to run them
+## 11. What each script does, and the order to run them
 
 ### `calibrate.py` — run this first
 
@@ -166,7 +208,7 @@ python screenshot.py   # optional, any time you want a logged snapshot
 
 ---
 
-## 11. Known issues / current limitations
+## 12. Known issues / current limitations
 
 **Crossings can take a few seconds to register.** Two things stack up:
 `run.py` runs two separate inference calls per frame (one per zone crop),
@@ -209,6 +251,19 @@ yolo predict model=yolo11s.pt source='https://ultralytics.com/images/bus.jpg'
 yolo export model=yolo11n.pt format=ncnn
 
 cp code/*.py .
+
+cat > .gitignore << 'EOF'
+yolo-env/
+__pycache__/
+*.pyc
+yolo11n.pt
+yolo11s.pt
+yolo11n_ncnn_model/
+runs/
+tally_log.csv
+calibration_snapshot.jpg
+EOF
+git add .gitignore && git commit -m "Add .gitignore" && git push
 
 python calibrate.py
 python run.py
