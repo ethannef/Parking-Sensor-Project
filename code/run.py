@@ -47,9 +47,6 @@ ZONES_FILE = "zones.json"
 LOG_FILE = "tally_log.csv"
 
 CONFIRM_FRAMES = 2           # consecutive frames required to confirm a zone covered/cleared (debounce)
-DETECTION_IMGSZ = 320        # inference resolution for each zone crop — lower is faster, less accurate.
-                              # YOLO resizes any input up/down to this size internally regardless of
-                              # the crop's actual dimensions, so this is what really controls speed.
 CROSSING_TIMEOUT = 30        # seconds allowed between first zone covered and second zone covered
 REFRESH_INTERVAL = 1.0       # seconds between dashboard redraws, like `watch -n 1`
 EVENT_HISTORY = 8            # number of recent events shown on the dashboard
@@ -274,8 +271,7 @@ def detect_in_zone(frame, zone_coords, frame_h, frame_w):
     if crop.size == 0:
         return False
 
-    results = model.predict(crop, conf=CONFIDENCE_THRESHOLD, classes=[target_class_id],
-                             imgsz=DETECTION_IMGSZ, verbose=False)
+    results = model.predict(crop, conf=CONFIDENCE_THRESHOLD, classes=[target_class_id], verbose=False)
     for r in results:
         if len(r.boxes) > 0:
             return True
