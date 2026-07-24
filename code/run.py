@@ -30,6 +30,12 @@ import json
 import os
 import sys
 
+try:
+    from gpiozero import LED
+    _gpio_available = True
+except ImportError:
+    _gpio_available = False
+
 # ---------------------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------------------
@@ -40,14 +46,64 @@ CONFIDENCE_THRESHOLD = 0.5
 ZONES_FILE = "zones.json"
 LOG_FILE = "tally_log.csv"
 
-COVERAGE_THRESHOLD = 0.5     # fraction of a zone's area that must be overlapped to count as "covered"
 CONFIRM_FRAMES = 2           # consecutive frames required to confirm a zone covered/cleared (debounce)
+DETECTION_IMGSZ = 320        # inference resolution for each zone crop — lower is faster, less accurate.
+                              # YOLO resizes any input up/down to this size internally regardless of
+                              # the crop's actual dimensions, so this is what really controls speed.
 CROSSING_TIMEOUT = 30        # seconds allowed between first zone covered and second zone covered
 REFRESH_INTERVAL = 1.0       # seconds between dashboard redraws, like `watch -n 1`
 EVENT_HISTORY = 8            # number of recent events shown on the dashboard
 HEADLESS = True              # set False only if you have a display (VNC/X11) attached
 
 REVERSE_DIRECTION = False    # flip to True if Zone B should be crossed first for an ENTRY
+
+GPIO_ENABLED = True          # set False to disable LED output entirely
+GREEN_LED_PIN = 17           # BCM pin number — lit when NOT full
+RED_LED_PIN = 27             # BCM pin number — lit when FULL
+
+# ---------------------------------------------------------------------------
+# SIZE TIERS — how far each zone crop is padded, scaled to the chosen
+# object's typical real-world size. A car needs far more crop context than
+# a bottle does for the detector to recognize it from a partial view.
+# ---------------------------------------------------------------------------
+
+MANUAL_CROP_MARGIN_OVERRIDE = None   # set an int (e.g. 100) to skip tier lookup and force a fixed margin
+
+SIZE_TIER_MARGINS = {
+    "small": 30,     # handheld items — bottle, cup, phone, scissors, etc.
+    "medium": 80,    # bags, small furniture, appliances, mid-size animals
+    "large": 150,    # people, bicycles, large animals, big furniture
+    "xlarge": 250,   # vehicles, elephants, giraffes
+}
+
+DEFAULT_TIER = "medium"   # fallback if the chosen class isn't in the mapping below
+
+CLASS_SIZE_TIERS = {
+    "person": "large", "bicycle": "large", "car": "xlarge", "motorcycle": "large",
+    "airplane": "xlarge", "bus": "xlarge", "train": "xlarge", "truck": "xlarge",
+    "boat": "xlarge", "traffic light": "small", "fire hydrant": "medium",
+    "stop sign": "medium", "parking meter": "medium", "bench": "large",
+    "bird": "medium", "cat": "medium", "dog": "medium", "horse": "large",
+    "sheep": "large", "cow": "large", "elephant": "xlarge", "bear": "large",
+    "zebra": "large", "giraffe": "xlarge", "backpack": "medium",
+    "umbrella": "medium", "handbag": "medium", "tie": "small",
+    "suitcase": "medium", "frisbee": "small", "skis": "medium",
+    "snowboard": "medium", "sports ball": "small", "kite": "small",
+    "baseball bat": "medium", "baseball glove": "small", "skateboard": "medium",
+    "surfboard": "medium", "tennis racket": "small", "bottle": "small",
+    "wine glass": "small", "cup": "small", "fork": "small", "knife": "small",
+    "spoon": "small", "bowl": "small", "banana": "small", "apple": "small",
+    "sandwich": "medium", "orange": "small", "broccoli": "small",
+    "carrot": "small", "hot dog": "small", "pizza": "medium", "donut": "small",
+    "cake": "medium", "chair": "medium", "couch": "large",
+    "potted plant": "medium", "bed": "large", "dining table": "large",
+    "toilet": "medium", "tv": "medium", "laptop": "medium", "mouse": "small",
+    "remote": "small", "keyboard": "medium", "cell phone": "small",
+    "microwave": "medium", "oven": "large", "toaster": "medium",
+    "sink": "medium", "refrigerator": "large", "book": "small",
+    "clock": "small", "vase": "small", "scissors": "small",
+    "teddy bear": "small", "hair drier": "small", "toothbrush": "small",
+}
 
 # ---------------------------------------------------------------------------
 # ANSI HELPERS (for the live dashboard)
@@ -127,6 +183,20 @@ while target_class_id is None:
 log(f"Watching for '{target_class_name}' (class ID {target_class_id}) crossing the zones.")
 
 # ---------------------------------------------------------------------------
+# STEP 2B — SET CROP MARGIN BASED ON THE CHOSEN CLASS'S SIZE TIER
+# ---------------------------------------------------------------------------
+
+if MANUAL_CROP_MARGIN_OVERRIDE is not None:
+    CROP_MARGIN = MANUAL_CROP_MARGIN_OVERRIDE
+    log(f"Using manual crop margin override: {CROP_MARGIN}px")
+else:
+    size_tier = CLASS_SIZE_TIERS.get(target_class_name.lower(), DEFAULT_TIER)
+    CROP_MARGIN = SIZE_TIER_MARGINS[size_tier]
+    if target_class_name.lower() not in CLASS_SIZE_TIERS:
+        log(f"'{target_class_name}' isn't in the size-tier table, defaulting to '{size_tier}' tier.")
+    log(f"'{target_class_name}' classified as size tier '{size_tier}' -> crop margin {CROP_MARGIN}px")
+
+# ---------------------------------------------------------------------------
 # STEP 3 — SET MAX CAPACITY
 # ---------------------------------------------------------------------------
 
@@ -161,22 +231,55 @@ def log_tally_event(event, tally_value):
     log_file.flush()
 
 
-def box_overlap_fraction(box_xyxy, zone_coords):
-    """Fraction of the ZONE's area that is covered by the given detection box."""
-    bx1, by1, bx2, by2 = box_xyxy
-    zx1, zy1, zx2, zy2 = zone_coords
+# ---------------------------------------------------------------------------
+# LED SETUP
+# ---------------------------------------------------------------------------
 
-    ix1, iy1 = max(bx1, zx1), max(by1, zy1)
-    ix2, iy2 = min(bx2, zx2), min(by2, zy2)
+green_led = None
+red_led = None
 
-    if ix2 <= ix1 or iy2 <= iy1:
-        return 0.0
+if GPIO_ENABLED and not _gpio_available:
+    log("GPIO_ENABLED is True but gpiozero isn't installed — skipping LED output.")
+    GPIO_ENABLED = False
 
-    intersection = (ix2 - ix1) * (iy2 - iy1)
-    zone_area = (zx2 - zx1) * (zy2 - zy1)
-    if zone_area <= 0:
-        return 0.0
-    return intersection / zone_area
+if GPIO_ENABLED:
+    green_led = LED(GREEN_LED_PIN)
+    red_led = LED(RED_LED_PIN)
+    log(f"LEDs ready (green=GPIO{GREEN_LED_PIN}, red=GPIO{RED_LED_PIN}).")
+
+
+def update_leds(tally_value):
+    if not GPIO_ENABLED:
+        return
+    if tally_value >= MAX_CAPACITY:
+        red_led.on()
+        green_led.off()
+    else:
+        green_led.on()
+        red_led.off()
+
+
+def detect_in_zone(frame, zone_coords, frame_h, frame_w):
+    """Crop the frame down to just this zone (padded by CROP_MARGIN, which
+    was set based on the chosen class's size tier) and run detection on
+    that crop alone. Returns True if the target class is found anywhere
+    in the crop."""
+    x1, y1, x2, y2 = zone_coords
+    cx1 = max(0, x1 - CROP_MARGIN)
+    cy1 = max(0, y1 - CROP_MARGIN)
+    cx2 = min(frame_w, x2 + CROP_MARGIN)
+    cy2 = min(frame_h, y2 + CROP_MARGIN)
+
+    crop = frame[cy1:cy2, cx1:cx2]
+    if crop.size == 0:
+        return False
+
+    results = model.predict(crop, conf=CONFIDENCE_THRESHOLD, classes=[target_class_id],
+                             imgsz=DETECTION_IMGSZ, verbose=False)
+    for r in results:
+        if len(r.boxes) > 0:
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +363,7 @@ crossing_start_time = None
 last_render_time = 0.0
 
 add_event("Monitoring started")
+update_leds(tally)
 
 # ---------------------------------------------------------------------------
 # MAIN LOOP
@@ -275,18 +379,9 @@ try:
             render_dashboard(tally, crossing_state, crossing_start_time)
             break
 
-        results = model.predict(frame, conf=CONFIDENCE_THRESHOLD, classes=[target_class_id], verbose=False)
-
-        best_overlap_a = 0.0
-        best_overlap_b = 0.0
-        for r in results:
-            for box in r.boxes:
-                xyxy = box.xyxy[0].tolist()
-                best_overlap_a = max(best_overlap_a, box_overlap_fraction(xyxy, ZONE_A))
-                best_overlap_b = max(best_overlap_b, box_overlap_fraction(xyxy, ZONE_B))
-
-        found_a = best_overlap_a >= COVERAGE_THRESHOLD
-        found_b = best_overlap_b >= COVERAGE_THRESHOLD
+        frame_h, frame_w = frame.shape[:2]
+        found_a = detect_in_zone(frame, ZONE_A, frame_h, frame_w)
+        found_b = detect_in_zone(frame, ZONE_B, frame_h, frame_w)
         now = time.time()
 
         # ---- debounce zone A, detect rising edge ----
@@ -336,6 +431,7 @@ try:
                 tally = min(MAX_CAPACITY, tally + 1) if event == "ENTRY" else max(0, tally - 1)
                 add_event(f"{event} logged — tally now {tally}/{MAX_CAPACITY}")
                 log_tally_event(event, tally)
+                update_leds(tally)
                 crossing_state = "NONE"
                 crossing_start_time = None
             elif now - crossing_start_time > CROSSING_TIMEOUT:
@@ -349,6 +445,7 @@ try:
                 tally = min(MAX_CAPACITY, tally + 1) if event == "ENTRY" else max(0, tally - 1)
                 add_event(f"{event} logged — tally now {tally}/{MAX_CAPACITY}")
                 log_tally_event(event, tally)
+                update_leds(tally)
                 crossing_state = "NONE"
                 crossing_start_time = None
             elif now - crossing_start_time > CROSSING_TIMEOUT:
@@ -384,5 +481,10 @@ finally:
     cap.release()
     if not HEADLESS:
         cv2.destroyAllWindows()
+    if GPIO_ENABLED:
+        green_led.off()
+        red_led.off()
+        green_led.close()
+        red_led.close()
     log_file.close()
     print(f"\nFinal tally: {tally}/{MAX_CAPACITY}")
